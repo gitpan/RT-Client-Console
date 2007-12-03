@@ -1,0 +1,23 @@
+--- #YAML:1.0
+name:                RT-Client-Console
+version:             0.0.1
+abstract:            [One line description of module's purpose here]
+license:             ~
+generated_by:        ExtUtils::MakeMaker version 6.36
+distribution_type:   module
+requires:     
+    Config::Tiny:                  0
+    Curses:                        0
+    Curses::Forms:                 0
+    Curses::Widgets:               0
+    Error:                         0
+    Params::Validate:              0
+    POE:                           0
+    RT::Client::REST:              0
+    Test::More:                    0
+    version:                       0
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - Damien "dams" Krotkine <dams@zarb.org>
