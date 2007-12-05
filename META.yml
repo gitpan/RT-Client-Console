@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                RT-Client-Console
-version:             0.0.1
+version:             0.0.2
 abstract:            [One line description of module's purpose here]
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.36

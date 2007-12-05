@@ -1,0 +1,181 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+use Getopt::Long;
+use Pod::Usage;
+
+use Config::Tiny;
+
+my %options;
+GetOptions(\%options,
+		   'server=s',
+		   'user=s',
+		   'pass=s',
+		   'queues=s',
+		   'config-file=s',
+		   'generate-config',
+		   'help',
+		  ) or usage();
+$options{help} and usage();
+
+sub usage {
+	pod2usage( {
+				-verbose => 1,
+			   }
+			 );
+}
+
+my $config = {};
+exists $options{$_} and $config->{connection}{$_} = $options{$_} foreach (qw(server user pass));
+exists $options{$_} and $config->{server}{$_} = $options{$_} foreach (qw(queues));
+
+my $config_filename = $ENV{HOME} . '/.rtconsolerc';
+exists $options{'config-file'} && length $options{'config-file'} and $config_filename = $options{'config-file'};
+
+my $config_ini;
+if ($options{'generate-config'}) {
+	if (! -e $config_filename) {
+		$config_ini = Config::Tiny->new() or
+		  die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+
+	} else {
+		$config_ini = Config::Tiny->read($config_filename) or
+		  die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+	}
+	$config_ini->{$_} = $config->{$_} foreach keys %$config;
+	$config_ini->write($config_filename) or
+		die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+	print "wrote configuration to file $config_filename\n";
+	exit;
+}
+
+if (-e $config_filename) {
+	$config_ini = Config::Tiny->read($config_filename) or
+	  die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+	$config->{$_} = $config_ini->{$_} foreach keys %$config_ini;
+}
+
+
+use Curses;
+my $curses_handler = new Curses;
+noecho();
+nodelay(1);
+$curses_handler->keypad(1);
+$curses_handler->syncok(1);
+curs_set(0);
+leaveok(1);
+
+# Erase the main window
+
+$curses_handler->erase();
+
+my $queues = $config->{server}{queues};
+my @queues = split(/\s+/, $queues);
+
+use RT::Client::Console;
+RT::Client::Console->run(curses_handler => $curses_handler,
+						 rt_servername => $config->{connection}{server},
+						 rt_username => $config->{connection}{user},
+						 rt_password => $config->{connection}{pass},
+						 queue_ids => \@queues,
+						);
+
+
+
+exit(0);
+
+__END__
+
+=head1 NAME
+
+rtconsole - RT text client console
+
+=head1 VERSION
+
+version 0.1
+
+=head1 USAGE
+
+    rtconsole [options]
+
+=head1 OPTIONS
+
+Options can be set --like=this, --like this, or -l this
+
+=over
+
+=item  --server server_name
+
+Specify the RT server
+
+=item  --user user_name
+
+Specify the user to connect to the server
+
+=item  --pass password
+
+Specify the password to connect to the server
+
+=item  --queues='1 12 54 23 84'
+
+Specify the ids of the queues on the server. That's because for now we can't
+get the list of queues automatically.
+
+=item  --config-file filename
+
+Specify the config file to read. Default $HOME/.rtconsolerc
+
+=item --generate-config
+
+Generates the config file
+
+=item --version
+
+=item --usage
+
+=item --help
+
+=back
+
+=head1 DESCRIPTION
+
+rtconsole is a text client to RT using ncurses.
+
+=head1 FILES
+
+The config file $HOME/.rtconsolerc (see the --config-file option) can be use to
+set options. The format is .ini file style. Here is an example with all
+possible keys/values for now :
+
+  [connection]
+  server=rt.cpan.org
+  user=dams
+  pass=my_password
+
+  [server]
+  queues=1 2 42 12 3
+
+For now there is only one section cannled Connection. More will be added in
+the next versions of this software.
+
+You can generate the config file by using --generate-config. It'll be saved at
+the location sp--config-file, or ad the default location
+
+=head1 AUTHOR
+
+Damien "dams" Krotkine (DAMS@CPAN.org)
+
+=head1 BUGS
+
+There are undoubtedly serious bugs lurking somewhere in this code.
+Bug reports and other feedback are most welcome.
+
+=head1 COPYRIGHT
+
+Copyright (c) 2007, Damien Krotkine. All Rights Reserved.
+This module is free software. It may be used, redistributed
+and/or modified under the terms of Perl itself
+
+=cut
