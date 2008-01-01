@@ -3,88 +3,98 @@
 use strict;
 use warnings;
 
+use Config::Tiny;
+use Curses;
+use Error qw(:try);
 use Getopt::Long;
 use Pod::Usage;
+use RT::Client::Console;
 
-use Config::Tiny;
+main() unless caller;
 
-my %options;
-GetOptions(\%options,
-		   'server=s',
-		   'user=s',
-		   'pass=s',
-		   'queues=s',
-		   'config-file=s',
-		   'generate-config',
-		   'help',
-		  ) or usage();
-$options{help} and usage();
+sub main {
+    my %options;
+    GetOptions(\%options,
+               'server=s',
+               'user=s',
+               'pass=s',
+               'config-file=s',
+               'generate-config',
+               'help',
+               'version|V',
+               'debug',
+              ) or usage();
+
+    $options{help} and usage();
+    $options{version} and print "rtconsole v$RT::Client::Console::VERSION\n" and exit;
+
+    # Unless debug is set, we redirect STDERR => /dev/null
+    if (!$options{debug}) {
+        close STDERR;
+        open STDERR, ">>/dev/null";
+    }
+
+    my $config = {};
+    exists $options{$_} and $config->{connection}{$_} = $options{$_} foreach (qw(server user pass));
+
+    my $config_filename = $ENV{HOME} . '/.rtconsolerc';
+    exists $options{'config-file'} && length $options{'config-file'} and $config_filename = $options{'config-file'};
+
+    my $config_ini;
+    if ($options{'generate-config'}) {
+        if (! -e $config_filename) {
+            $config_ini = Config::Tiny->new() or
+              die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+            
+        } else {
+            $config_ini = Config::Tiny->read($config_filename) or
+              die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+        }
+        $config_ini->{$_} = $config->{$_} foreach keys %$config;
+        $config_ini->write($config_filename) or
+          die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+        print "wrote configuration to file $config_filename\n";
+        return;
+    }
+    
+    if (-e $config_filename) {
+        $config_ini = Config::Tiny->read($config_filename) or
+          die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
+        $config->{$_} = $config_ini->{$_} foreach keys %$config_ini;
+    }
+    
+    
+    my $curses_handler = new Curses;
+    noecho();
+    nodelay(1);
+    $curses_handler->keypad(1);
+    $curses_handler->syncok(1);
+    curs_set(0);
+    leaveok(1);
+    
+    # Erase the main window
+    
+    $curses_handler->erase();
+    
+    try {
+        RT::Client::Console->run(curses_handler => $curses_handler,
+                                 rt_servername => $config->{connection}{server},
+                                 rt_username => $config->{connection}{user},
+                                 rt_password => $config->{connection}{pass},
+                                );
+        endwin;
+    } otherwise {
+        endwin;
+        print STDERR "\n\n ---- Main Error Message :\n$@\n";
+    };
+}
 
 sub usage {
-	pod2usage( {
-				-verbose => 1,
-			   }
-			 );
+    pod2usage( {
+                -verbose => 1,
+               }
+             );
 }
-
-my $config = {};
-exists $options{$_} and $config->{connection}{$_} = $options{$_} foreach (qw(server user pass));
-exists $options{$_} and $config->{server}{$_} = $options{$_} foreach (qw(queues));
-
-my $config_filename = $ENV{HOME} . '/.rtconsolerc';
-exists $options{'config-file'} && length $options{'config-file'} and $config_filename = $options{'config-file'};
-
-my $config_ini;
-if ($options{'generate-config'}) {
-	if (! -e $config_filename) {
-		$config_ini = Config::Tiny->new() or
-		  die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
-
-	} else {
-		$config_ini = Config::Tiny->read($config_filename) or
-		  die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
-	}
-	$config_ini->{$_} = $config->{$_} foreach keys %$config;
-	$config_ini->write($config_filename) or
-		die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
-	print "wrote configuration to file $config_filename\n";
-	exit;
-}
-
-if (-e $config_filename) {
-	$config_ini = Config::Tiny->read($config_filename) or
-	  die "Couldn't open $config_filename to save the configuration. The error was : $Config::Tiny::errstr \n";
-	$config->{$_} = $config_ini->{$_} foreach keys %$config_ini;
-}
-
-
-use Curses;
-my $curses_handler = new Curses;
-noecho();
-nodelay(1);
-$curses_handler->keypad(1);
-$curses_handler->syncok(1);
-curs_set(0);
-leaveok(1);
-
-# Erase the main window
-
-$curses_handler->erase();
-
-my $queues = $config->{server}{queues};
-my @queues = split(/\s+/, $queues);
-
-use RT::Client::Console;
-RT::Client::Console->run(curses_handler => $curses_handler,
-						 rt_servername => $config->{connection}{server},
-						 rt_username => $config->{connection}{user},
-						 rt_password => $config->{connection}{pass},
-						 queue_ids => \@queues,
-						);
-
-
-
-exit(0);
 
 __END__
 
@@ -118,11 +128,6 @@ Specify the user to connect to the server
 
 Specify the password to connect to the server
 
-=item  --queues='1 12 54 23 84'
-
-Specify the ids of the queues on the server. That's because for now we can't
-get the list of queues automatically.
-
 =item  --config-file filename
 
 Specify the config file to read. Default $HOME/.rtconsolerc
@@ -131,11 +136,19 @@ Specify the config file to read. Default $HOME/.rtconsolerc
 
 Generates the config file
 
+=item --help
+
+Print this help
+
 =item --version
 
-=item --usage
+Print the program name and version, then exit
 
-=item --help
+=item --debug
+
+Outputs errors and debug messages on STDERR. enable this to see what's going
+wrong. I recommend redirecting STDERR to a temp file to avoid breaking the
+display
 
 =back
 
@@ -153,9 +166,6 @@ possible keys/values for now :
   server=rt.cpan.org
   user=dams
   pass=my_password
-
-  [server]
-  queues=1 2 42 12 3
 
 For now there is only one section cannled Connection. More will be added in
 the next versions of this software.

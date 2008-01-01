@@ -1,95 +1,107 @@
 package RT::Client::Console::Session::KeyHandler;
 
-use base qw(RT::Client::Console::Session);
+use strict;
+use warnings;
 
-use Params::Validate qw(:all);
-
-use POE;
+use parent qw(RT::Client::Console::Session);
 
 use Curses;
+use Params::Validate qw(:all);
+use POE;
+
 
 # class method
+
+# key handler session creation
 sub create {
-	my ($class) = @_;
+    my ($class) = @_;
 
-	$class->SUPER::create(
+    $class->SUPER::create(
     'key_handler',
-	inline_states => {
+    inline_states => {
         init => sub {
- 			my ($kernel, $heap) = @_[ KERNEL, HEAP];
- 			$kernel->yield('compute_keys');
- 			$kernel->yield('draw_all');
+             my ($kernel, $heap) = @_[ KERNEL, HEAP];
+             $kernel->yield('compute_keys');
+             $kernel->yield('draw_all');
 
-			# Generate events from console input.  Sets up Curses, too.
-			# use POE::Wheel::MyCurses;
-			$heap->{console} = POE::Wheel::MyCurses->new(
-														 InputEvent => 'handler',
-														);
-		},
- 		handler => sub {
- 			my ($kernel, $heap, $keystroke) = @_[ KERNEL, HEAP, ARG0];
-			if ($keystroke ne -1) {
- 				if ($keystroke lt ' ') {
- 					$keystroke = '<' . uc(unctrl($keystroke)) . '>';
- 				} elsif ($keystroke =~ /^\d{2,}$/) {
- 					$keystroke = '<' . uc(keyname($keystroke)) . '>';
- 				}
- 				print STDERR "handler got $keystroke\n";
-				if (@{$class->GLOBAL_HEAP->{modal_sessions}}) {
- 					print STDERR "modal handler : " . $class->GLOBAL_HEAP->{modal_sessions}->[-1] . "\n";
-					$kernel->call($class->GLOBAL_HEAP->{modal_sessions}->[-1], 'key_handler', $keystroke);
-# 					$kernel->yield('compute_keys');
- 					$kernel->yield('draw_all');
-				} elsif (exists $heap->{key_to_action}->{$keystroke}) {
- 					my $action = $heap->{key_to_action}->{$keystroke};
- 					print STDERR "action : $action, event : $action->{event}\n";
- 					$kernel->call($action->{session}, $action->{event});
- 					$kernel->call('key_handler', 'compute_keys');
- 					$kernel->call('key_handler', 'draw_all');
- 				}
-			}
- 		},
- 		compute_keys => sub {
- 			my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
- 			my $status_message = '';
- 			$heap->{key_to_action} = {};
-			while (my ($session_name, $struct) = each %{$class->GLOBAL_HEAP->{sessions}}) {
-				$struct->{displayed} or next;
- 				my @list = $kernel->call($session_name, 'available_keys');
-				foreach (@list) {
-					defined && ref or next;
-					my ($key, $message, $event) = @$_;
-					defined $key or next;
-					$status_message .= " | $key: $message";
-					$heap->{key_to_action}->{$key} = { session => $session_name, event => $event };
-				}
- 			}
-			$kernel->call('status', 'set_message', $status_message);
- 			return;
- 		},
- 		draw_all => sub {
- 			my ($kernel, $heap) = @_[ KERNEL, HEAP ];
-			noutrefresh();
- 			if ($class->GLOBAL_HEAP->{curses}{need_clear}) {
- 				clear();
-				$class->GLOBAL_HEAP->{curses}{need_clear} = 0;
-				$kernel->yield('draw_all');
- 			} else {
-				while (my ($session_name, $struct) = each %{$class->GLOBAL_HEAP->{sessions}}) {
-					$struct->{displayed} and 
-					  $kernel->call($session_name, 'draw');
-				}
-				foreach my $modal_session (@{$class->GLOBAL_HEAP->{modal_sessions}}) {
-					$kernel->call($modal_session, 'draw');
-				}
-			}
-			doupdate();
- 		}
-	},
-	heap => { 
-			  console => undef,
-			},
-	);
+            # Generate events from console input.  Sets up Curses, too.
+            $heap->{console} = POE::Wheel::MyCurses->new(
+                                                         InputEvent => 'handler',
+                                                        );
+        },
+        _quit => sub {
+             my ($kernel, $heap) = @_[ KERNEL, HEAP];
+            # release the Curses wheel
+            undef $heap->{console};
+        },
+         handler => sub {
+             my ($kernel, $heap, $keystroke) = @_[ KERNEL, HEAP, ARG0];
+            if ($keystroke ne -1) {
+                 if ($keystroke lt ' ') {
+                     $keystroke = '<' . uc(unctrl($keystroke)) . '>';
+                 } elsif ($keystroke =~ /^\d{2,}$/) {
+                     $keystroke = '<' . uc(keyname($keystroke)) . '>';
+                 }
+                 print STDERR "handler got $keystroke\n";
+                my $modal_session = ($class->get_modal_sessions())[-1];
+                if ($modal_session) {
+                     print STDERR "modal handler : " . $modal_session . "\n";
+                    $kernel->call($modal_session, 'key_handler', $keystroke);
+                     $kernel->call('key_handler', 'draw_all');
+                } elsif (exists $heap->{key_to_action}->{$keystroke}) {
+                     my $action = $heap->{key_to_action}->{$keystroke};
+                     print STDERR "action : $action, event : $action->{event}\n";
+                     my $ret = $kernel->call($action->{session}, $action->{event});
+                    $kernel->call('key_handler', 'compute_keys');
+                    if ($ret != -1) {
+                        $kernel->call('key_handler', 'draw_all');
+                    }
+                 }
+            }
+         },
+         compute_keys => sub {
+             my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
+             my $status_message = '';
+             $heap->{key_to_action} = {};
+            my %sessions = $class->get_sessions();
+            while (my ($session_name, $struct) = each %sessions) {
+                $struct->{displayed} or next;
+                 my @list = $kernel->call($session_name, 'available_keys');
+                foreach (@list) {
+                    defined && ref or next;
+                    my ($key, $message, $event) = @$_;
+                    defined $key or next;
+                    $status_message .= " | $key: $message";
+                    $heap->{key_to_action}->{$key} = { session => $session_name, event => $event };
+                }
+             }
+            $kernel->call('status', 'set_message', $status_message);
+             return;
+         },
+         draw_all => sub {
+             my ($kernel, $heap) = @_[ KERNEL, HEAP ];
+            noutrefresh();
+             if ($class->need_cls) {
+                 clear();
+                $class->reset_cls();
+                $kernel->yield('draw_all');
+             } else {
+                my %sessions = $class->get_sessions();
+                while (my ($session_name, $struct) = each %sessions) {
+                    $struct->{displayed} and 
+                      $kernel->call($session_name, 'draw');
+                }
+                foreach my $modal_session ($class->get_modal_sessions()) {
+                    $kernel->call($modal_session, 'draw');
+                }
+            }
+            doupdate();
+         }
+    },
+    heap => { 
+              console => undef,
+            },
+    );
 
 }
 
@@ -108,7 +120,9 @@ sub create {
 
 
 
+# TODO : clean and try to use POE::Wheel::Curses instead
 
+# our own Cuses::Wheel
 package POE::Wheel::MyCurses;
 
 use strict;
@@ -124,9 +138,8 @@ use Carp qw(croak);
 #);
 
 use Curses;
-
-use POSIX qw(:fcntl_h);
 use POE qw( Wheel );
+use POSIX qw(:fcntl_h);
 
 
 sub SELF_STATE_READ  () { 0 }

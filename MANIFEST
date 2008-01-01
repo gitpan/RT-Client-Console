@@ -9,10 +9,13 @@ lib/RT/Client/Console/Session/Status.pm
 lib/RT/Client/Console/Session/TabBar.pm
 lib/RT/Client/Console/Session/Ticket.pm
 lib/RT/Client/Console/Session/Ticket/Attachments.pm
+lib/RT/Client/Console/Session/Ticket/Transactions.pm
 lib/RT/Client/Console/Session/Ticket/CustFields.pm
 lib/RT/Client/Console/Session/Ticket/Header.pm
 lib/RT/Client/Console/Session/Ticket/Links.pm
 Makefile.PL
 MANIFEST			This list of files
 README
+t/00-load.t
+t/programs.t
 META.yml                                 Module meta-data (added by MakeMaker)

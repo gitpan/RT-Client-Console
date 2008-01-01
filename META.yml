@@ -1,7 +1,7 @@
 --- #YAML:1.0
 name:                RT-Client-Console
-version:             0.0.2
-abstract:            [One line description of module's purpose here]
+version:             0.0.4
+abstract:            Text based RT console
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.36
 distribution_type:   module
@@ -12,7 +12,9 @@ requires:
     Curses::Widgets:               0
     Error:                         0
     Params::Validate:              0
+    parent:                        0
     POE:                           0
+    relative:                      0
     RT::Client::REST:              0
     Test::More:                    0
     version:                       0
