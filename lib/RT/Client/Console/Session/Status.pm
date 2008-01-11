@@ -23,14 +23,13 @@ sub create {
         inline_states => {
             init => sub {
                 my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
-                # Get the main screen max y & X
-                my ($screen_w, $screen_h);
-                $class->get_curses_handler()->getmaxyx($screen_h, $screen_w);
-    
-                $heap->{'pos_x'} = 0;
-                $heap->{'pos_y'} = $screen_h - 4;
-                $heap->{width} = $screen_w-2;
+                $heap->{pos_x} = 0;
                 $heap->{height} = 1;
+			},
+			window_resize => sub {
+				my ($kernel, $heap, $old_screen_h, $old_screen_w) = @_[ KERNEL, HEAP, ARG0, ARG1 ];
+                $heap->{pos_y} = $heap->{screen_h} - 4;
+                $heap->{width} = $heap->{screen_w} - 2;
             },
             set_message => sub {
                 my ($kernel, $heap, $message) = @_[ KERNEL, HEAP, ARG0 ];
@@ -46,8 +45,8 @@ sub create {
                                                       BORDER      => 1,
                                                       LINES       => $heap->{height},
                                                       COLUMNS     => $heap->{width},
-                                                      Y           => $heap->{'pos_y'},
-                                                      X           => $heap->{'pos_x'},
+                                                      Y           => $heap->{pos_y},
+                                                      X           => $heap->{pos_x},
                                                       VALUE       => $heap->{message},
                                                       FOREGROUND  => 'white',
                                                       BACKGROUND  => 'blue',

@@ -21,14 +21,13 @@ sub create {
     inline_states => {
         init => sub {
             my ($kernel, $heap) = @_[ KERNEL, HEAP ];
-
-            my ($screen_w, $screen_h);
-            $class->get_curses_handler()->getmaxyx($screen_h, $screen_w);
-    
-            $heap->{pos_x } = $screen_w * 2 / 3 + 1;
             $heap->{pos_y } = 1;  # tabs-bar
-            $heap->{width } = $screen_w - $heap->{pos_x} - 2;  # - border
-            $heap->{height} = $screen_h - $heap->{pos_y} - 2 - 2;  # - status - border
+        },
+        window_resize => sub { 
+            my ($kernel, $heap, $old_screen_h, $old_screen_w) = @_[ KERNEL, HEAP, ARG0, ARG1 ];
+            $heap->{pos_x } = $heap->{screen_w} * 2 / 3 + 1;
+            $heap->{width } = $heap->{screen_w} - $heap->{pos_x} - 2;  # - border
+            $heap->{height} = $heap->{screen_h} - $heap->{pos_y} - 2 - 2;  # - status - border
         },
         available_keys => sub {
             return (['l', 'change links', 'change_links']);

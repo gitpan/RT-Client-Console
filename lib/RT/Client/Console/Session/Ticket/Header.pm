@@ -8,8 +8,6 @@ use parent qw(RT::Client::Console::Session);
 use Curses::Forms;
 use Params::Validate qw(:all);
 use POE;
-use RT::Client::Console::Session::Ticket;
-use RT::Client::Console::Session::Ticket;
 use relative -to => "RT::Client::Console", 
         -aliased => qw(Cnx Session Session::Ticket);
 
@@ -24,15 +22,13 @@ sub create {
     inline_states => {
         init => sub {
             my ($kernel, $heap) = @_[ KERNEL, HEAP ];
-
-            my ($screen_w, $screen_h);
-            $class->get_curses_handler()->getmaxyx($screen_h, $screen_w);
-
             $heap->{pos_x } = 0;
             $heap->{pos_y } = 1;  # tabs-bar
-            $heap->{width } = $screen_w * 2 / 3 - 2;  # - border
-            $heap->{height} = 5;
-
+            $heap->{height} = 5;            
+        },
+        window_resize => sub { 
+            my ($kernel, $heap, $old_screen_h, $old_screen_w) = @_[ KERNEL, HEAP, ARG0, ARG1 ];
+            $heap->{width } = $heap->{screen_w} * 2 / 3 - 2;  # - border
         },
         available_keys => sub {
             return (['h', 'change ticket header', 'change_header']);

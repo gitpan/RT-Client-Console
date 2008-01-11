@@ -18,19 +18,21 @@ sub create {
     $class->SUPER::create(
         'progress_draw',
         inline_states => {
+                          init => sub {
+                              my ($kernel, $heap) = @_[ KERNEL, HEAP ];
+                          },
                           draw => sub {
                               my ( $kernel, $heap) = @_[ KERNEL, HEAP ];
                               my $draw_x = 0;
                               my @toremove = ();
-                              my ($screen_w, $screen_h);
+
                               my $curses_handler = $class->get_curses_handler();
-                              $curses_handler->getmaxyx($screen_h, $screen_w);
 
                               my $label = Curses::Widgets::Label->new({
                                         BORDER      => 0,
                                         X           => 0,
-                                        Y           => $screen_h - 1,
-                                        COLUMNS     => $screen_w,
+                                        Y           => $heap->{screen_h} - 1,
+                                        COLUMNS     => $heap->{screen_w},
                                         LINES       => 1,
                                         VALUE       => '',
                                         FOREGROUND  => 'black',
@@ -49,7 +51,7 @@ sub create {
                                         BORDER      => 0,
                                         LINES       => 1,
                                         COLUMNS     => length($text),
-                                        Y           => $screen_h - 1,
+                                        Y           => $heap->{screen_h} - 1,
                                         X           => $draw_x,
                                         VALUE       => $text,
                                         FOREGROUND  => 'white',

@@ -22,7 +22,9 @@ sub create {
     $args{inline_states}{_start} = sub { 
         my ($kernel, $heap) = @_[ KERNEL, HEAP ];
         $kernel->alias_set($name);
+#        $kernel->call($name, 'window_resize', undef, undef);
         $kernel->call($name, 'init');
+        $kernel->call($name, '__window_resize', 1);
     };
     $args{inline_states}{_unalias} = sub {
         my ($kernel, $heap) = @_[ KERNEL, HEAP ];
@@ -31,6 +33,20 @@ sub create {
             $kernel->alias_remove($alias);
         }
     };
+    # automaic window change handling
+	$args{inline_states}{__window_resize} = sub {
+        my ($kernel, $heap, $is_init_mode) = @_[ KERNEL, HEAP, ARG0 ];
+        my ($old_screen_h, $old_screen_w) = @{$heap}{qw(screen_h screen_w)};
+        my ($screen_w, $screen_h);
+        $class->get_curses_handler()->getmaxyx($screen_h, $screen_w);        
+        $heap->{screen_h} = $screen_h;
+        $heap->{screen_w} = $screen_w;
+        print STDERR " -- $name -- __window resize " . $heap->{screen_w} . " | " . $heap->{screen_h} . "\n";
+        $is_init_mode or $kernel->yield('draw');
+        # give a chance to the session to do something specific
+        $kernel->call($name, 'window_resize', $old_screen_h, $old_screen_w);
+    };
+
     $sessions{$name} = {
                         poe_object => POE::Session->create(%args),
                         displayed => 1,
@@ -58,6 +74,7 @@ sub create_modal {
 
     my ($screen_w, $screen_h);
 
+    # get screen size
     my $curses_handler = $class->get_curses_handler();
     $curses_handler->getmaxyx($screen_h, $screen_w);
     

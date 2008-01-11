@@ -25,16 +25,13 @@ sub create {
     inline_states => {
         init => sub {
             my ($kernel, $heap) = @_[ KERNEL, HEAP ];
-
-
-            my ($screen_w, $screen_h);
-            $class->get_curses_handler()->getmaxyx($screen_h, $screen_w);
-
-            $heap->{pos_x } = 0;
-            $heap->{pos_y } = 1 + 7 + 6;  # tabs-bar + headers + custhdrs
-            $heap->{width } = $screen_w * 2 / 3 - 2;  # - border
-            $heap->{height} = $screen_h - $heap->{pos_y} - 2 - 2;
-
+            $heap->{pos_x} = 0;
+            $heap->{pos_y} = 1 + 7 + 6;  # tabs-bar + headers + custhdrs
+        },
+        window_resize => sub {
+            my ($kernel, $heap, $old_screen_h, $old_screen_w) = @_[ KERNEL, HEAP, ARG0, ARG1 ];
+            $heap->{width } = $heap->{screen_w} * 2 / 3 - 2;  # - border
+            $heap->{height} = $heap->{screen_h} - $heap->{pos_y} - 2 - 2;
         },
         available_keys => sub {
             return (['<KEY_NPAGE>', 'next attachment',  'next_transaction'],

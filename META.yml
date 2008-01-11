@@ -1,23 +1,23 @@
 --- #YAML:1.0
 name:                RT-Client-Console
-version:             0.0.4
+version:             0.0.5
 abstract:            Text based RT console
-license:             ~
+license:             perl
 generated_by:        ExtUtils::MakeMaker version 6.36
 distribution_type:   module
 requires:     
-    Config::Tiny:                  0
-    Curses:                        0
-    Curses::Forms:                 0
-    Curses::Widgets:               0
-    Error:                         0
-    Params::Validate:              0
-    parent:                        0
-    POE:                           0
-    relative:                      0
-    RT::Client::REST:              0
+    Config::Tiny:                  2.03
+    Curses:                        1.20
+    Curses::Forms:                 1.997
+    Curses::Widgets:               1.997
+    Error:                         0.17011
+    Params::Validate:              0.89
+    parent:                        0.218
+    POE:                           0.9999
+    relative:                      0.03
+    RT::Client::REST:              0.32
     Test::More:                    0
-    version:                       0
+    version:                       0.74
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.2.html
     version: 1.2

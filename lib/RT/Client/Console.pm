@@ -12,13 +12,28 @@ use List::Util qw(min max);
 use Params::Validate qw(:all);
 use relative -aliased => qw(Cnx Session Session::Root Session::KeyHandler);
 
-our $VERSION = '0.0.4';
+our $VERSION = '0.0.5';
 
 
 # global Curses handler
 my $curses_handler;
 sub get_curses_handler {
     return $curses_handler;
+}
+
+# global configuration
+my $configuration;
+sub set_configuration {
+    my $class = shift;
+    my %params = validate( @_, { configuration => { type => HASHREF },
+                               }
+                         );
+    $configuration = $params{configuration};
+}
+
+sub get_configuration {
+
+    return $configuration;
 }
 
 # main method. effectively starts the console
@@ -48,6 +63,11 @@ sub run {
 
 
 # curses related methods
+
+sub restart_curses {
+	endwin;
+	refresh;
+}
 
 {
 
@@ -175,6 +195,7 @@ sub input_list {
     my $value_idx = $index_of{$params{value}};
     my $title = $params{title};
 
+    # get screen size
     my ($screen_w, $screen_h);
     $curses_handler->getmaxyx($screen_h, $screen_w);
 

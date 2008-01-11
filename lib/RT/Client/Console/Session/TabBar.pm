@@ -23,11 +23,6 @@ sub create {
         inline_states => {
             init => sub {
                 my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
-                # Get the main screen max y & X
-                my ($screen_w, $screen_h);
-                $class->get_curses_handler()->getmaxyx($screen_h, $screen_w);
-    
-                $heap->{width} = $screen_w;
             },
             draw => sub { 
                 my ($kernel,$heap) = @_[ KERNEL, HEAP ];
@@ -41,7 +36,7 @@ sub create {
                                         BORDER      => 0,
                                         X           => 0,
                                         Y           => 0,
-                                        COLUMNS     => $heap->{width},
+                                        COLUMNS     => $heap->{screen_w},
                                         LINES       => 1,
                                         VALUE       => '',
                                         FOREGROUND  => 'black',
@@ -51,7 +46,7 @@ sub create {
                 
                 my $current_id = Ticket->get_current_id();
                 my @visible_tickets = @tickets;
-                while (! _is_visible($current_id, \@visible_tickets, $heap->{width})) {
+                while (! _is_visible($current_id, \@visible_tickets, $heap->{screen_w})) {
                     shift @visible_tickets;                    
                 }
 
@@ -60,7 +55,7 @@ sub create {
                 foreach my $index (0..@visible_tickets-1) {
                     my $ticket = $visible_tickets[$index];
                     my $string = '[ ' . $ticket->id() . ' ]';
-                    $current_pos_x + length($string) > $heap->{width} and last;
+                    $current_pos_x + length($string) > $heap->{screen_w} and last;
                     $widgets->{"tab_$index"} = 
                       {
                        TYPE        => 'Label',
@@ -78,7 +73,7 @@ sub create {
                 my $form = Curses::Forms->new({
                        X           => 0,
                        Y           => 0,
-                       COLUMNS     => $heap->{width},
+                       COLUMNS     => $heap->{screen_w},
                        LINES       => 1,
                        BORDER      => 0,
                        FOREGROUND  => 'white',
@@ -92,7 +87,6 @@ sub create {
                 $form->draw($curses_handler);
             },
         },
-        heap => { 'width' => 0 },
     );
 }
 
