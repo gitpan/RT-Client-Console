@@ -9,7 +9,6 @@ use Curses;
 use Params::Validate qw(:all);
 use POE;
 
-
 # class method
 
 # key handler session creation
@@ -53,7 +52,7 @@ sub create {
                      print STDERR "action : $action, event : $action->{event}\n";
                      my $ret = $kernel->call($action->{session}, $action->{event});
                     $kernel->call('key_handler', 'compute_keys');
-                    if ($ret != -1) {
+                    if (!defined $ret || $ret ne '-1') {
                         $kernel->call('key_handler', 'draw_all');
                     }
                  }
@@ -63,24 +62,24 @@ sub create {
              my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
              my $status_message = '';
              $heap->{key_to_action} = {};
-            my %sessions = $class->get_sessions();
-            while (my ($session_name, $struct) = each %sessions) {
-                $struct->{displayed} or next;
+             my %sessions = $class->get_sessions();
+             while (my ($session_name, $struct) = each %sessions) {
+                 $struct->{displayed} or next;
                  my @list = $kernel->call($session_name, 'available_keys');
-                foreach (@list) {
-                    defined && ref or next;
-                    my ($key, $message, $event) = @$_;
-                    defined $key or next;
-                    $status_message .= " | $key: $message";
-                    $heap->{key_to_action}->{$key} = { session => $session_name, event => $event };
-                }
+                 foreach (@list) {
+                     defined && ref or next;
+                     my ($key, $message, $event) = @$_;
+                     defined $key or next;
+                     $status_message .= " | $key: $message";
+                     $heap->{key_to_action}->{$key} = { session => $session_name, event => $event };
+                 }
              }
-            $kernel->call('status', 'set_message', $status_message);
+             $kernel->call('status', 'set_message', $status_message);
              return;
          },
          draw_all => sub {
              my ($kernel, $heap) = @_[ KERNEL, HEAP ];
-            noutrefresh();
+             noutrefresh();
              if ($class->need_cls) {
                  clear();
                 $class->reset_cls();

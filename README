@@ -24,32 +24,25 @@ INSTALLATION
         make test
         make install
 
-    Alternatively, to install with Module::Build, you can use the 
-    following commands:
-
-        perl Build.PL
-        ./Build
-        ./Build test
-        ./Build install
-
-
 DEPENDENCIES
 
+    Config::Tiny
     Curses
     Curses::Forms
     Curses::Widgets
     Error
-    Memoize
     Params::Validate
+    parent
     POE
     RT::Client::REST
-    Config::Tiny
-    parent
+    relative
+    version
+    List::MoreUtils
 
 
 COPYRIGHT AND LICENCE
 
-    Copyright (C) 2007, Damien "dams" Krotkine
+    Copyright (C) 2007-2008, Damien "dams" Krotkine <dams@cpan.org>
 
     This library is free software; you can redistribute it and/or modify
     it under the same terms as Perl itself.

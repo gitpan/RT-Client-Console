@@ -2,7 +2,7 @@ bin/rtconsole
 gfx/rtconsole.png
 gfx/rtconsole.xcf
 lib/RT/Client/Console.pm
-lib/RT/Client/Console/Cnx.pm
+lib/RT/Client/Console/Connection.pm
 lib/RT/Client/Console/Session.pm
 lib/RT/Client/Console/Session/KeyHandler.pm
 lib/RT/Client/Console/Session/Progress.pm

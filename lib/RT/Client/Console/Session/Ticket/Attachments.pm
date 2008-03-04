@@ -14,7 +14,7 @@ use POE;
 use Memoize;
 use RT::Client::REST::User;
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session Session::Ticket Session::Progress);
+        -aliased => qw(Connection Session Session::Ticket Session::Progress);
 
 
 # class method
@@ -141,7 +141,7 @@ sub create {
             if (defined $attachment) {
                 try {
                     my $user_id = $attachment->creator_id();
-                    my $rt_handler = Cnx->get_cnx_data()->{handler};
+                    my $rt_handler = Connection->get_cnx_data()->{handler};
 
                     my ($user, $user_name, $user_email, $user_real_name, $user_gecos, $user_comments)
                       = _get_user_details( rt  => $rt_handler,
@@ -238,7 +238,7 @@ sub as_text {
     if (defined $attachment->transaction_id()) {
         my $id = $attachment->transaction_id();
         $s .= "\n--- transaction $id ----\n";
-        my $rt_handler = Cnx->get_cnx_data()->{handler};
+        my $rt_handler = Connection->get_cnx_data()->{handler};
         my $transaction = $rt_handler->get_transaction(parent_id => $ticket_id,
                                                        id => $id);
 
@@ -281,7 +281,7 @@ sub _generate_job {
 
     my @ids;
     my $idx = 0;
-    my $rt_handler = Cnx->get_cnx_data()->{handler};
+    my $rt_handler = Connection->get_cnx_data()->{handler};
     my $iterator;
     Progress->add_progress(
             steps_nb => sub { $heap->{total} },

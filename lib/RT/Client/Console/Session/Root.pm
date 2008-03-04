@@ -8,10 +8,12 @@ use parent qw(RT::Client::Console::Session);
 use Params::Validate qw(:all);
 use POE;
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session);
+        -aliased => qw(Connection Session);
 use relative -to => "RT::Client::Console::Session", 
         -aliased => qw(Progress Status TabBar Ticket);
 
+use Curses::Forms::Dialog;
+use List::MoreUtils qw(any);
 
 # class method
 
@@ -24,7 +26,6 @@ sub create {
     inline_states => {
         init => sub {
             my ($kernel, $heap) = @_[ KERNEL, HEAP ];
-            print STDERR "root : init\n";
             $class->get_curses_handler()->clear();
             $kernel->yield('create_tab_bar');
 #            $kernel->yield('create_status_session');
@@ -52,12 +53,12 @@ sub create {
         window_resize => sub {
             my ($kernel, $heap, $old_screen_h, $old_screen_w) = @_[ KERNEL, HEAP, ARG0, ARG1 ];
             $heap->{pos_y} = $heap->{screen_h} - 2;
-            print STDERR " -- ROOT -- window resize " . $heap->{screen_w} . " | " . $heap->{screen_h} . "\n";
             $heap->{width} = $heap->{screen_w};
         },
         available_keys => sub {
             my @available_list = ();
-            my $rt_handler = Cnx->get_cnx_data()->{handler};
+            my $rt_handler = Connection->get_cnx_data()->{handler};
+            push @available_list, ['?', 'help', 'help'];
             push @available_list, ['q', 'quit', 'quit'];
             if (!$rt_handler) {
                 push @available_list, ['s', 'connect to RT server', 'connect_server'];
@@ -68,6 +69,9 @@ sub create {
                     push @available_list, ['c', 'close current tab', 'close_tab'];
                     push @available_list, ['p', 'prev. tab', 'prev_tab'];
                     push @available_list, ['n', 'next tab', 'next_tab'];
+                    if (Ticket->get_current_ticket()->has_changed()) {
+                        push @available_list, ['s', 'save ticket', 'store_ticket'];
+                    }
                 }
             }
             return @available_list;
@@ -79,7 +83,31 @@ sub create {
                                      X => $heap->{pos_x},
                                      COLUMNS => $heap->{width},
                                      VALUE => \@keys,
+                                     erase_before => 1,
                                    );
+        },
+        help => sub {
+            my ($kernel, $heap) = @_[ KERNEL, HEAP ];
+             my %sessions = $class->get_sessions();
+            my $text = '';
+             while (my ($session_name, $struct) = each %sessions) {
+                 $struct->{displayed} or next;
+                 my @list = $kernel->call($session_name, 'available_keys');
+                 @list > 0 && any { ref && defined $_->[0] } @list or next;
+                 $text .= "\n * $session_name\n";
+                 foreach (@list) {
+                     defined && ref or next;
+                     my ($key, $message) = @$_;
+                     defined $key or next;
+                     $key =~ s/^<//;
+                     $key =~ s/>$//;
+                     $text .= "    $key: $message \n";
+                 }
+             }
+            $text .= "\n";
+            $class->create_choice_modal( title => 'available keys',
+                                         text => $text,
+                                       );
         },
         quit => sub {
             my ($kernel, $heap) = @_[ KERNEL, HEAP ];
@@ -95,13 +123,12 @@ sub create {
             Progress->create();
         },
         connect_server => sub {
-            Cnx->connect();
+            Connection->connect();
         },
         disconnect_server => sub {
-            Cnx->disconnect();
+            Connection->disconnect();
         },
         open_ticket => sub {
-            print STDERR "root.pm : opening ticket\n";
             Ticket->load();
         },
         close_tab => sub {
@@ -113,6 +140,9 @@ sub create {
         prev_tab => sub {
             Ticket->prev_ticket();
         },
+        store_ticket => sub {
+            Ticket->save_current_if_needed();
+        }
     }
     );
 }

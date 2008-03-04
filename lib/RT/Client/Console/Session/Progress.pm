@@ -111,4 +111,24 @@ sub add_progress {
     );
 }
 
+# add an asynchronous progress session
+sub add_and_execute {
+    my ($class, $text, $code) = @_;
+
+    my $progress_text = [$text, 0];
+    push @progress_texts, $progress_text;
+    $poe_kernel->call('progress_draw', 'draw');
+
+    my @ret;
+    eval { @ret = wantarray ? $code->() : scalar($code->()) };
+	my $save_error = $@;
+
+    $progress_text->[0] = ' ' x length $text;
+    $progress_text->[1] = 1;
+    $poe_kernel->call('progress_draw', 'draw');
+
+    $save_error and die $save_error;
+    return @ret;
+}
+
 1;

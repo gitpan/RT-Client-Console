@@ -9,7 +9,7 @@ use Curses::Forms;
 use Curses::Widgets::Label;
 use POE;
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session Session::Ticket);
+        -aliased => qw(Connection Session Session::Ticket);
 
 
 # class method
@@ -54,7 +54,7 @@ sub create {
                 my $current_pos_x = 0;
                 foreach my $index (0..@visible_tickets-1) {
                     my $ticket = $visible_tickets[$index];
-                    my $string = '[ ' . $ticket->id() . ' ]';
+                    my $string = '[ ' . $ticket->id() . ( $ticket->has_changed() ? ' *' : '' ). ' ]';
                     $current_pos_x + length($string) > $heap->{screen_w} and last;
                     $widgets->{"tab_$index"} = 
                       {
@@ -94,7 +94,7 @@ sub _is_visible {
     my ($id, $visible_tickets, $max_width) = @_;
     my $current_pos_x = 0;
     foreach my $ticket (@$visible_tickets) {
-        $current_pos_x += length "[ $id ]";
+        $current_pos_x += length "[ $id" . ( $ticket->has_changed() ? ' *' : '' ) . ' ]';
         print STDERR ("-- ticket id : " . $ticket->id() . "\n");
         print STDERR ("-- id : " . $id . "\n");
         print STDERR ("-- " . ($current_pos_x > $max_width) . "\n");

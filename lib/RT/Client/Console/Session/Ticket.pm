@@ -13,10 +13,8 @@ use Params::Validate qw(:all);
 use RT::Client::REST;
 use RT::Client::REST::Ticket;
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session);
+        -aliased => qw(Connection Session);
 use relative -aliased => qw(Header CustFields Links Transactions);
-
-
 
 my @tickets_list = ();
 my $current_ticket_id;
@@ -56,7 +54,7 @@ sub load_from_id {
     my ($class, $id) = @_;
     try {
         my $ticket;
-        if (! ($ticket = $class->_is_loaded($id)) ) {
+        if (! (scalar($class->_is_loaded($id))) ) {
             $ticket = $class->new($id);
             push @tickets_list, $ticket;
         }
@@ -68,13 +66,17 @@ sub load_from_id {
     return;
 }
 
+# set the display status of the sessions of tickets.
+
 sub _set_visibility {
     my ($class) = @_;
+    # set every ticket sessions invisible
     foreach my $ticket (@tickets_list) {
         foreach my $session (@{$ticket->{sessions}}) {
             Session->set_display($session, 0);
         }
     }
+    # set current ticket sessions visible
     my $current_ticket = $class->get_current_ticket();
     defined $current_ticket or return;
     foreach my $session (@{$current_ticket->{sessions}}) {
@@ -91,12 +93,14 @@ the tab, or list of loaded tickets.
 
 sub open_from_id {
     my ($class, $id) = @_;
-    my $rt_handler = RT::Client::Console::Cnx->get_cnx_data()->{handler};
+    my $rt_handler = RT::Client::Console::Connection->get_cnx_data()->{handler};
     my $ticket = RT::Client::REST::Ticket->new(
                                                 rt  => $rt_handler,
                                                 id  => $id,
                                               );
-    $ticket->retrieve();
+    RT::Client::Console::Session::Progress->add_and_execute('retrieving ticket',
+									   sub { $ticket->retrieve() },
+									  );
     return $ticket;
 }
 
@@ -114,15 +118,17 @@ sub new {
 
     # the 'create' methods returns the name of the session, so the array
     # contains keep the list of child sessions.
-    $self->{sessions} = [ Header->create($id),
-                          CustFields->create($id),
-                          Links->create($id),
-                          Transactions->create($id),
+    $self->{sessions} = [
+                        Header->create($id),
+                        CustFields->create($id),
+                        Links->create($id),
+                        Transactions->create($id),
                         ];
+    $self->{changed} = 0;
     return bless $self, $class;
 }
 
-=head1 ACCESSORS
+=head1 CLASS METHODS
 
 =head2 get_tickets_list
 
@@ -133,36 +139,6 @@ Returns the list of loaded tickets.
 sub get_tickets_list {
     return @tickets_list;
 }
-
-=head1 METHODS
-
-=head2 unload
-
-unload a ticket
-
-=cut
-
-sub unload {
-    my ($self) = @_;
-    # break references
-    foreach my $session_name (@{$self->{sessions}}) {
-        Session->remove($session_name);
-    }
-    # remove from the list of tickets
-    @tickets_list = grep { $_ ne $self } @tickets_list;
-    # display the next visible ticket
-    if ($self->get_current_id() == $self->id()) {
-        if (@tickets_list > 0) {
-            $self->set_current_ticket($tickets_list[-1]);
-        } else {
-            $self->set_current_id(undef);
-            $self->cls();
-        }
-    }
-    $self->_set_visibility();
-}
-
-=head1 METHODS
 
 =head2 get_current_ticket
 
@@ -252,9 +228,87 @@ sub prev_ticket {
 
 sub _is_loaded {
     my ($class, $id) = @_;
-    my @matches = grep { $_->{id} eq $id } @tickets_list;
+    my @matches = grep { $_->id() == $id } @tickets_list;
     @matches <= 1 or die "tickets loaded twice, shouldn't happen";
     return @matches;
+}
+
+=head1 METHODS
+
+=head2 set_changed
+
+set the "changed" status of a ticket
+
+=cut
+
+sub set_changed {
+    my ($self, $status) = @_;
+    $self->{changed} = $status;
+    return;
+}
+
+=head2 has_changed
+
+Return true if the ticket has been changed and needs to be saved
+
+=cut
+
+sub has_changed {
+    my ($self) = @_;
+    return $self->{changed};
+}
+
+sub save_current_if_needed {
+    my ($class) = @_;
+    if (my $ticket = $class->get_current_ticket()) {
+        if ($ticket->has_changed()) {
+			try {
+				Session->execute_wait_modal('  Saving the ticket ' . $ticket->id() . '...  ',
+											sub { $ticket->store();
+												  $ticket->set_changed(0);
+											  }
+										   );
+			} otherwise {
+				$class->error('problem saving ticket ' . $ticket->id() . ' : ' . shift->message());
+			};
+        }
+    }
+}
+
+=head2 unload
+
+unload a ticket
+
+=cut
+
+sub unload {
+    my ($self) = @_;
+    # warn if ticket needs saving
+print STDERR "_____________******* UNLOAD\n";
+    if ($self->has_changed()) {
+        use Curses::Forms::Dialog;
+        my $ret = dialog('Unsaved changes made', BTN_YES | BTN_NO | BTN_CANCEL, 'Do you want to save this ticket before closing it ?', 
+                         qw(white red yellow));
+        $ret eq 2 and return; # cancel
+        $ret eq 0 and $self->save_current_if_needed(); #yes
+        # otherwise, continue closing without saving
+    }
+    # break references
+    foreach my $session_name (@{$self->{sessions}}) {
+        Session->remove($session_name);
+    }
+    # remove from the list of tickets
+    @tickets_list = grep { $_ ne $self } @tickets_list;
+    # display the next visible ticket
+    if ($self->get_current_id() == $self->id()) {
+        if (@tickets_list > 0) {
+            $self->set_current_ticket($tickets_list[-1]);
+        } else {
+            $self->set_current_id(undef);
+            $self->cls();
+        }
+    }
+    $self->_set_visibility();
 }
 
 1;

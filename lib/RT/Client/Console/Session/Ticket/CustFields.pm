@@ -10,7 +10,7 @@ use Params::Validate qw(:all);
 use POE;
 use POSIX qw(floor);
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session Session::Ticket);
+        -aliased => qw(Connection Session Session::Ticket);
 
 
 # class method
@@ -36,9 +36,53 @@ sub create {
         },
         change_custfields => sub {
             my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
-            $class->create_modal( title => 'Change Custom fields',
+            $class->create_choice_modal(
+                                  title => 'Change Custom fields',
                                   text => '',
                                   keys => {
+                                           n => { text => 'new custom field',
+                                                  code => sub {
+                                                      if (my $field_name = $class->input_ok_cancel('New custom field name',
+                                                                                                   '', 500)) {
+                                                          if (my $field_value = $class->input_ok_cancel("$field_name value",
+                                                                                                        '', 500)) {
+                                                              my $ticket = Ticket->get_current_ticket();
+                                                              $ticket->cf($field_name, $field_value);
+                                                              $ticket->set_changed(1);
+                                                              return 1; # stop modal mode
+                                                          }
+                                                      }
+                                                  },
+                                                },
+                                           e => { text => 'edit custom field',
+                                                  code => sub {
+                                                      my $ticket = Ticket->get_current_ticket();
+                                                      my @custom_fields = sort $ticket->cf();
+                                                      my $field_name = $class->input_list(title => ' Edit custom fields ',
+                                                                                          items => [ @custom_fields ],
+                                                                                          value => $custom_fields[0],
+                                                                                         );
+                                                      if (my $field_value = $class->input_ok_cancel("$field_name value",
+                                                                                                    '', 500)) {
+                                                          $ticket->cf($field_name, $field_value);
+                                                          $ticket->set_changed(1);
+                                                          return 1; # stop modal mode
+                                                      }
+                                                  }
+                                                },
+                                           d => { text => 'delete custom field',
+                                                  code => sub {
+                                                      my $ticket = Ticket->get_current_ticket();
+                                                      my @custom_fields = sort $ticket->cf();
+                                                      my $field_name = $class->input_list(title => ' Delete custom fields ',
+                                                                                          items => [ @custom_fields ],
+                                                                                          value => $custom_fields[0],
+                                                                                         );
+                                                      $ticket->cf($field_name, undef);
+                                                      $ticket->set_changed(1);
+                                                      return 1; # stop modal mode
+                                                  }
+                                                },
                                           },
                                 );
         },

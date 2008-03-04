@@ -7,7 +7,7 @@ use Test::More;
 
 my @modules = qw(
     RT::Client::Console
-    RT::Client::Console::Cnx
+    RT::Client::Console::Connection
     RT::Client::Console::Session
     RT::Client::Console::Session::KeyHandler
     RT::Client::Console::Session::Progress

@@ -9,7 +9,7 @@ use Curses::Forms;
 use Params::Validate qw(:all);
 use POE;
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session Session::Ticket Session::Progress);
+        -aliased => qw(Connection Session Session::Ticket Session::Progress);
 
 # class method
 
@@ -34,7 +34,8 @@ sub create {
         },
         change_links => sub {
             my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
-            $class->create_modal( title => 'Change tickets links',
+            $class->create_choice_modal(
+                                  title => 'Change tickets links',
                                   text => '',
                                   keys => {
                                            p => { text => 'change parents',
@@ -212,7 +213,7 @@ sub _generate_job {
     $heap->{$element} = [];
     my @ids;
     my $idx = 0;
-    my $rt_handler = Cnx->get_cnx_data()->{handler};
+    my $rt_handler = Connection->get_cnx_data()->{handler};
     Progress->add_progress(
             steps_nb => sub { scalar(@ids) },
             caption => sub { $element },

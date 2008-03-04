@@ -10,10 +10,31 @@ use Curses::Forms::Dialog::Input;
 use Curses::Widgets::ListBox;
 use List::Util qw(min max);
 use Params::Validate qw(:all);
-use relative -aliased => qw(Cnx Session Session::Root Session::KeyHandler);
+use relative -aliased => qw(Connection Session Session::Root Session::KeyHandler);
 
-our $VERSION = '0.0.5';
+our $VERSION = '0.0.6';
 
+
+=head1 NAME
+
+RT::Client::Console - Text based RT console
+
+=head1 SYNOPSIS
+
+  rtconsole [OPTIONS]
+  rtconsole --help
+
+=head1 DESCRIPTION
+
+RT::Client::Console distribution provides an executable I<rtconsole> and
+modules. The executable is a full-featured curses-based interface to any RT
+server that has REST interface enabled.
+
+The modules provides comprehensive ways to connect, interact and display
+informations from the RT server. A plugin mechanism is planned, and will enable
+more flexibility.
+
+=cut
 
 # global Curses handler
 my $curses_handler;
@@ -32,7 +53,6 @@ sub set_configuration {
 }
 
 sub get_configuration {
-
     return $configuration;
 }
 
@@ -53,7 +73,7 @@ sub run {
     KeyHandler->create();
 
     if ( exists $params{rt_servername}) {
-        Cnx->connect(%params);
+        Connection->connect(%params);
     }
 
     # starts POE runtime
@@ -103,6 +123,12 @@ sub draw_keys_label {
                                  VALUE       => { type => ARRAYREF },  # [ [ key => 'label' ], [...] ]
                                  X           => { type => SCALAR },   
                                  Y           => { type => SCALAR },
+                                 erase_before => { type => SCALAR,
+                                                   optional => 1,
+                                                 },
+                                 erase_background => { type => SCALAR,
+                                                       default => 'black', 
+                                                     },
                                }
                          );
 
@@ -112,6 +138,18 @@ sub draw_keys_label {
     my $foreground2 = $params{FOREGROUND2};
     my $background  = $params{BACKGROUND};
 
+    if ($params{erase_before}) {
+        my $label = Curses::Widgets::Label->new({ BORDER      => 0,
+                                                  LINES       => 1,
+                                                  COLUMNS     => $max_length,
+                                                  Y           => $params{Y},
+                                                  X           => $params{X},
+                                                  VALUE       => ' ' x $max_length,
+                                                  FOREGROUND  => $foreground,
+                                                  BACKGROUND  => $params{erase_background},
+                                                });
+        $label->draw($class->get_curses_handler());
+    }
     foreach my $key_struct (@{$params{VALUE}}) {
         my ($key, $text) = @$key_struct;
         $key = " $key: ";
@@ -290,22 +328,20 @@ sub struct_to_widgets {
 
 # temporary pause POE events and run the widget in modal mode
 sub my_execute {
-  my $class = shift;
-  my $self = shift;
-  my $mwh = shift;
+  my ($class, $self, $mwh) = @_;
   my $conf = $self->{CONF};
-  my $func = $$conf{'INPUTFUNC'} || \&Curses::Widgets::scankey;
-  my $regex = $$conf{'FOCUSSWITCH'};
+  my $func = $conf->{INPUTFUNC} || \&Curses::Widgets::scankey;
+  my $regex = $conf->{FOCUSSWITCH};
   my $key;
 
   $self->draw($mwh, 1);
 
   while (1) {
-    $key = &$func($mwh);
+    $key = $func->($mwh);
     if (defined $key) {
       $self->input_key($key);
       if (defined $regex) {
-        return $key if ($key =~ /^[$regex]/);
+        return $key if ($key =~ /^[$regex]$/);
       }
     }
     $self->draw($mwh, 1);
@@ -314,25 +350,6 @@ sub my_execute {
 
 1; # Magic true value required at end of module
 __END__
-
-=head1 NAME
-
-RT::Client::Console - Text based RT console
-
-=head1 SYNOPSIS
-
-  rtconsole [OPTIONS]
-  rtconsole --help
-
-=head1 DESCRIPTION
-
-RT::Client::Console distribution provides an executable I<rtconsole> and
-modules. The executable is ready to use and is a full-featured curses-based
-interface to any RT server that supports the REST interface.
-
-The modules provides comprehensive ways to connect, interact and display
-informations from the RT server. A plugin mechanism is planned, and will enable
-more flexibility.
 
 =head1 DEPENDENCIES
 

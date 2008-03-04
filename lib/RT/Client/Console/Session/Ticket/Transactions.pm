@@ -11,8 +11,8 @@ use Curses::Widgets::ListBox;
 use Curses::Widgets::TextMemo;
 use POE;
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session Session::Ticket Session::Progress);
-
+        -aliased => qw(Connection Session Session::Ticket Session::Progress);
+use RT::Client::Console::Session::Ticket;
 
 # class method
 
@@ -34,12 +34,14 @@ sub create {
             $heap->{height} = $heap->{screen_h} - $heap->{pos_y} - 2 - 2;
         },
         available_keys => sub {
-            return (['<KEY_NPAGE>', 'next attachment',  'next_transaction'],
-                    ['<KEY_PPAGE>', 'prev. attachment', 'prev_transaction'],
-                    ['<KEY_UP>',    'scroll up',        'scroll_up'      ],
-                    ['<KEY_DOWN>',  'scroll down',      'scroll_down'    ],
-                    ['b',           'page up',          'page_up'        ],
-                    [' ',           'page down',        'page_down'      ],
+            return (['e',           'new comment',   'new_comment'     ],
+                    ['<KEY_NPAGE>', 'next attach.',  'next_transaction'],
+                    ['<KEY_PPAGE>', 'prev. attach.', 'prev_transaction'],
+                    ['<KEY_UP>',    'scroll up',     'scroll_up'       ],
+                    ['<KEY_DOWN>',  'scroll down',   'scroll_down'     ],
+
+#                     ['b',           'page up',          'page_up'        ],
+#                     [' ',           'page down',        'page_down'      ],
                    );
         },
 
@@ -186,6 +188,19 @@ sub create {
                                      BACKGROUND  => 'black'
                                    );
         },
+        new_comment => sub {
+            my ($kernel, $heap) = @_[ KERNEL, HEAP ];
+            my ($button, $text) = Session->execute_textmemo_modal(
+                title => 'new comment',
+                text => '',
+			);
+			if ($button == 0) {
+				my $ticket = RT::Client::Console::Session::Ticket->get_current_ticket();
+				$ticket or return;
+				$ticket->correspond(message => $text);
+				$class->_generate_job($kernel, $heap, $ticket_id);
+			}
+        },
     },
     heap => { 'pos_x' => 0,
               'pos_y' => 0,
@@ -276,7 +291,7 @@ sub _generate_job {
 
     my @ids;
     my $idx = 0;
-    my $rt_handler = Cnx->get_cnx_data()->{handler};
+    my $rt_handler = Connection->get_cnx_data()->{handler};
     my $iterator;
     Progress->add_progress(
             steps_nb => sub { $heap->{total} },

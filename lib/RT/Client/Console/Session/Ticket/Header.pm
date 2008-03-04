@@ -9,7 +9,7 @@ use Curses::Forms;
 use Params::Validate qw(:all);
 use POE;
 use relative -to => "RT::Client::Console", 
-        -aliased => qw(Cnx Session Session::Ticket);
+        -aliased => qw(Connection Session Session::Ticket);
 
 # class method
 
@@ -36,13 +36,15 @@ sub create {
         change_header => sub {
             my ( $kernel, $heap ) = @_[ KERNEL, HEAP ];
             my $ticket = Ticket->get_current_ticket();
-            $class->create_modal( title => 'Change ticket headers',
+            $class->create_choice_modal(
+                                  title => 'Change ticket headers',
                                   text => '',
                                   keys => {
                                            s => { text => 'change subject',
                                                   code => sub {
                                                       if (my $new_subject = $class->input_ok_cancel('Change subject', $ticket->subject(), 500)) {
                                                           $ticket->subject($new_subject);
+                                                          $ticket->set_changed(1);
                                                           return 1; # stop modal mode
                                                       }
                                                   }
@@ -54,6 +56,7 @@ sub create {
                                                                                               value => $ticket->status(),
                                                                                              )) {
                                                           $ticket->status($new_status);
+                                                          $ticket->set_changed(1);
                                                           return 1; # stop modal mode
                                                       }
                                                   }
@@ -63,6 +66,7 @@ sub create {
 
                                                       if (my $new_queue = $class->input_ok_cancel('Change queue', $ticket->queue(), 500)) {
                                                           $ticket->queue($new_queue);
+                                                          $ticket->set_changed(1);
                                                           return 1; # stop modal mode
                                                       }
 
@@ -91,12 +95,19 @@ sub create {
                                                   code => sub {
                                                       if (my $new_priority = $class->input_ok_cancel('Change priority', $ticket->priority(), 20)) {
                                                           $ticket->priority($new_priority);
+                                                          $ticket->set_changed(1);
                                                           return 1; # stop modal mode
                                                       }
                                                   }
                                                 },
                                            o => { text => 'change owner',
-                                                  code => sub {},
+                                                  code => sub {
+                                                      if (my $new_owner = $class->input_ok_cancel('Change priority', $ticket->owner(), 60)) {
+                                                          $ticket->owner($new_owner);
+                                                          $ticket->set_changed(1);
+                                                          return 1; # stop modal mode
+                                                      }
+                                                  }
                                                 },
                                           },
                                 );
