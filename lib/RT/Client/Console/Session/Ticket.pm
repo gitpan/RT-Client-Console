@@ -21,6 +21,36 @@ my $current_ticket_id;
 
 =head1 CONSTRUCTORS
 
+=head2 create
+
+Create a new ticket. Displays input fields to the users.
+
+=cut
+
+sub create {
+    my ($class) = @_;
+    my $id;
+    my $subject = $class->input_ok_cancel('New ticket', 'Enter the subject') or return;
+    my $queue = $class->input_ok_cancel('New ticket', 'Enter the queue name or ID') or return;
+    my ($button, $text) = Session->execute_textmemo_modal( title => 'New ticket',
+                                                           text => '',
+                                                         );
+    $button and return;
+    my $ticket;
+    try {
+        my $rt_handler = RT::Client::Console::Connection->get_cnx_data()->{handler};
+        $ticket = RT::Client::REST::Ticket->new( rt => $rt_handler,
+                                                 queue => $queue,
+                                                 subject => $subject,
+            )->store(text => $text);
+        print STDERR " --> Created a new ticket, ID ", $ticket->id(), "\n";
+        $class->load_from_id($ticket->id())
+    } otherwise {
+        $class->error("problem creating rt : " . $@);
+    };
+    return;
+}
+
 =head2 load
 
 Loads a new ticket, or if already created, make sure it's made visible. If
@@ -172,7 +202,7 @@ sub set_current_ticket {
     $current_ticket_id = defined $ticket ? $ticket->id() : undef;
 }
 
-=head set_current_id
+=head2 set_current_id
 
 =cut
 

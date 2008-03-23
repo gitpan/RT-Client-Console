@@ -1,0 +1,199 @@
+2008-03-23  Sébastien Aperghis-Tramoni <saper@cpan.org>
+
+	* authors:
+	  Adding my UID->name mapping.
+
+2008-03-23  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console.pm:
+	  bumped version to 0.1.0
+
+	* lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/KeyHandler.pm,
+	  lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/Ticket.pm:
+	  . ESC now exists home-made menus
+	  . new feature : rtconsole can now create new tickets
+
+2008-03-19  Sébastien Aperghis-Tramoni <saper@cpan.org>
+
+	* MANIFEST:
+	  Add the changelog to the public distribution (thus fixing a
+	  CPANTS metric).
+
+	* MANIFEST:
+	  Add t/pod.t to the public distribution.
+
+	* lib/RT/Client/Console/Session/Ticket.pm:
+	  Fix Pod error.
+
+	* t/pod-coverage.t, t/pod.t:
+	  Add Pod structure and coverage tests.
+
+2008-03-04  Damien "dams" Krotkine <dams@cpan.org>
+
+	* Changes:
+	  updated changes
+
+	* lib/RT/Client/Console.pm:
+	  version 0.0.6
+
+	* Changes:
+	  added Changes
+
+	* authors, create_changes.sh:
+	  added Changes generation
+
+	* Makefile.PL, README, t/00-load.t:
+	  fixed prereqs versions, changed Cnx -> Connection in test. Fixed
+	  README
+
+	* Makefile.PL:
+	  updated prereqs
+
+	* lib/RT/Client/Console/Connection.pm,
+	  lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/Ticket.pm:
+	  better comment box, and catch errors while saving RT
+
+2008-02-27  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/Ticket.pm,
+	  lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  better comment box
+
+2008-02-25  Damien "dams" Krotkine <dams@cpan.org>
+
+	* MANIFEST, lib/RT/Client/Console.pm, lib/RT/Client/Console/Cnx.pm,
+	  lib/RT/Client/Console/Connection.pm,
+	  lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/TabBar.pm,
+	  lib/RT/Client/Console/Session/Ticket.pm,
+	  lib/RT/Client/Console/Session/Ticket/Attachments.pm,
+	  lib/RT/Client/Console/Session/Ticket/CustFields.pm,
+	  lib/RT/Client/Console/Session/Ticket/Header.pm,
+	  lib/RT/Client/Console/Session/Ticket/Links.pm,
+	  lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  renamed Cnx to Connection, added more dialog related features
+
+2008-02-23  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/Progress.pm,
+	  lib/RT/Client/Console/Session/Ticket.pm:
+	  better input dialog box (to add new comment)
+
+	* lib/RT/Client/Console/Session/Ticket.pm:
+	  fixed RT display duplication
+
+2008-02-18  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console.pm, lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/KeyHandler.pm,
+	  lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  more dialog code
+
+2008-01-30  Damien "dams" Krotkine <dams@cpan.org>
+
+	* Makefile.PL, lib/RT/Client/Console/Cnx.pm,
+	  lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/KeyHandler.pm,
+	  lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/Ticket.pm,
+	  lib/RT/Client/Console/Session/Ticket/CustFields.pm,
+	  lib/RT/Client/Console/Session/Ticket/Header.pm,
+	  lib/RT/Client/Console/Session/Ticket/Links.pm:
+	  . better modal session, added modal dialog and wait window
+	  . implemented keyboard shortcuts dialog
+	  . some minor improvments
+
+2008-01-29  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session/KeyHandler.pm:
+	  reindentation
+
+2008-01-25  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/Root.pm:
+	  ticket saving implementation.
+
+2008-01-20  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/TabBar.pm,
+	  lib/RT/Client/Console/Session/Ticket.pm,
+	  lib/RT/Client/Console/Session/Ticket/CustFields.pm,
+	  lib/RT/Client/Console/Session/Ticket/Header.pm:
+	  . custom fields edition
+	  . now ticket can be saved
+	  . tab bar indicates if ticket needs saving
+	  . added a unsaved data warning dialog
+	  . minor doc changes
+
+2008-01-11  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console.pm:
+	  bump version to 0.0.5
+
+	* MANIFEST:
+	  updated manifest
+
+2008-01-10  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/Progress.pm,
+	  lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/Status.pm,
+	  lib/RT/Client/Console/Session/TabBar.pm,
+	  lib/RT/Client/Console/Session/Ticket/Attachments.pm,
+	  lib/RT/Client/Console/Session/Ticket/CustFields.pm,
+	  lib/RT/Client/Console/Session/Ticket/Header.pm,
+	  lib/RT/Client/Console/Session/Ticket/Links.pm,
+	  lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  . reduce the window resizing code
+	  . try git commit -v
+
+	* lib/RT/Client/Console.pm,
+	  lib/RT/Client/Console/Session/Progress.pm,
+	  lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/Status.pm,
+	  lib/RT/Client/Console/Session/TabBar.pm,
+	  lib/RT/Client/Console/Session/Ticket/Attachments.pm,
+	  lib/RT/Client/Console/Session/Ticket/CustFields.pm,
+	  lib/RT/Client/Console/Session/Ticket/Header.pm,
+	  lib/RT/Client/Console/Session/Ticket/Links.pm,
+	  lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  first implementation of handling WINCH signal.
+	  Works, but some quirks are still displayd, and more importantly :
+	  it crashes if the window is resized during an event execution it
+	  seems.
+
+2008-01-09  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console.pm:
+	  testing commiting from git-svn
+
+	* branches, tags, ., MANIFEST, Makefile.PL, README, bin,
+	  bin/rtconsole, gfx, gfx/rtconsole.png, gfx/rtconsole.xcf, lib,
+	  lib/RT, lib/RT/Client, lib/RT/Client/Console,
+	  lib/RT/Client/Console.pm, lib/RT/Client/Console/Cnx.pm,
+	  lib/RT/Client/Console/Session, lib/RT/Client/Console/Session.pm,
+	  lib/RT/Client/Console/Session/KeyHandler.pm,
+	  lib/RT/Client/Console/Session/Progress.pm,
+	  lib/RT/Client/Console/Session/Root.pm,
+	  lib/RT/Client/Console/Session/Status.pm,
+	  lib/RT/Client/Console/Session/TabBar.pm,
+	  lib/RT/Client/Console/Session/Ticket,
+	  lib/RT/Client/Console/Session/Ticket.pm,
+	  lib/RT/Client/Console/Session/Ticket/Attachments.pm,
+	  lib/RT/Client/Console/Session/Ticket/CustFields.pm,
+	  lib/RT/Client/Console/Session/Ticket/Header.pm,
+	  lib/RT/Client/Console/Session/Ticket/Links.pm,
+	  lib/RT/Client/Console/Session/Ticket/Transactions.pm, t,
+	  t/00-load.t, t/programs.t:
+	  original import
+

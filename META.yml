@@ -1,13 +1,10 @@
---- #YAML:1.0
-name:                RT-Client-Console
-version:             0.0.6
-abstract:            Text based RT console
-license:             perl
-author:              
-    - Damien "dams" Krotkine <dams@zarb.org>
-generated_by:        ExtUtils::MakeMaker version 6.44
-distribution_type:   module
-requires:     
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         RT-Client-Console
+version:      0.1.0
+version_from: lib/RT/Client/Console.pm
+installdirs:  site
+requires:
     Config::Tiny:                  2.03
     Curses:                        1.13
     Curses::Forms:                 1.997
@@ -21,6 +18,6 @@ requires:
     RT::Client::REST:              0.34
     Test::More:                    0
     version:                       0.7203
-meta-spec:
-    url:     http://module-build.sourceforge.net/META-spec-v1.3.html
-    version: 1.3
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.30_01

@@ -12,7 +12,7 @@ use List::Util qw(min max);
 use Params::Validate qw(:all);
 use relative -aliased => qw(Connection Session Session::Root Session::KeyHandler);
 
-our $VERSION = '0.0.6';
+our $VERSION = '0.1.0';
 
 
 =head1 NAME

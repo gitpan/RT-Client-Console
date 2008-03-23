@@ -37,8 +37,10 @@ sub create {
              my ($kernel, $heap, $keystroke) = @_[ KERNEL, HEAP, ARG0];
             if ($keystroke ne -1) {
                  if ($keystroke lt ' ') {
+                     print STDERR " %%% 1 [$keystroke]\n";
                      $keystroke = '<' . uc(unctrl($keystroke)) . '>';
                  } elsif ($keystroke =~ /^\d{2,}$/) {
+                     print STDERR " %%% 2 [$keystroke]\n";
                      $keystroke = '<' . uc(keyname($keystroke)) . '>';
                  }
                  print STDERR "handler got $keystroke\n";

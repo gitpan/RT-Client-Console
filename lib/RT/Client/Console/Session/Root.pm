@@ -64,6 +64,7 @@ sub create {
                 push @available_list, ['s', 'connect to RT server', 'connect_server'];
             } else {
                 push @available_list, ['d', 'disconnect', 'disconnect_server'];
+                push @available_list, ['a', 'add a new ticket', 'add_ticket'];
                 push @available_list, ['o', 'open a ticket', 'open_ticket'];
                 if (defined Ticket->get_current_id()) {
                     push @available_list, ['c', 'close current tab', 'close_tab'];
@@ -130,6 +131,9 @@ sub create {
         },
         open_ticket => sub {
             Ticket->load();
+        },
+        add_ticket => sub {
+            Ticket->create();
         },
         close_tab => sub {
             Ticket->get_current_ticket()->unload();

@@ -106,6 +106,9 @@ sub create_choice_modal {
         while (my ($k, $v) = each %{$args{keys}} ) {
             $text .= "$k : " . $v->{text} . "\n";
         }
+        $args{keys}{'<^[>'} ||= { text => "close this dialog",
+                             code => sub { return 1 },
+                           };
     }
 
     my $height = scalar( () = $text =~ /(\n)/g) + 1;
