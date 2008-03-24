@@ -12,7 +12,7 @@ use List::Util qw(min max);
 use Params::Validate qw(:all);
 use relative -aliased => qw(Connection Session Session::Root Session::KeyHandler);
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.2.0';
 
 
 =head1 NAME
@@ -188,6 +188,15 @@ sub draw_keys_label {
     }
 }
 
+# display a simple message
+sub message {
+    my ($class, $title, $message) = @_;
+    dialog($title, BTN_OK, $message, 
+           qw(white red yellow));
+    $class->cls();
+    return;
+}
+
 # display a simple error message
 sub error {
     my ($class, $message) = @_;
@@ -237,7 +246,7 @@ sub input_list {
     my ($screen_w, $screen_h);
     $curses_handler->getmaxyx($screen_h, $screen_w);
 
-    my $height = min(@display_items + 2, $screen_h - 20);
+    my $height = min(scalar(@display_items), $screen_h - 20);
     my $width = min( max( map { length } (@display_items, $title) ) + 2, $screen_w - 20 );
 
     my $list_box = Curses::Widgets::ListBox->new({ LINES       => $height,

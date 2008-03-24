@@ -31,6 +31,7 @@ Returns the connection data.
 
   input : none
   output : hashref, a copy of the connection data keys/values
+
 =cut
 
 sub get_cnx_data {
@@ -45,6 +46,7 @@ configuration, or asked to the user.
   input : rt_servername (optional) : RT server name (full URL)
           rt_username (optional) : RT login
           rt_password (optional) : RT password
+
 =cut
 
 sub connect {
@@ -56,7 +58,7 @@ sub connect {
                          );
 
     if (!defined $params{rt_servername}) {
-        $params{rt_servername} = $class->input_ok_cancel('Connexion', 'RT server name') or return;
+        $params{rt_servername} = $class->input_ok_cancel('Connection', 'RT server name') or return;
     }
     $params{rt_servername} or return;
 

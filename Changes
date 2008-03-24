@@ -1,3 +1,49 @@
+2008-03-24  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  typo
+
+	* bin/rtconsole:
+	  fixed doc
+
+	* lib/RT/Client/Console/Connection.pm:
+	  fix typo
+
+	* lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  make viewer configurable, cleanup _get_transaction_attachments
+
+2008-03-24  Sébastien Aperghis-Tramoni <saper@cpan.org>
+
+	* lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  Filehandle must be set to binary.
+
+	* lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  Use File::Spec's catfile() for creating a file path.
+
+2008-03-24  Damien "dams" Krotkine <dams@cpan.org>
+
+	* lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  corected download -> view
+
+	* lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  view attachments ssomehow working
+
+	* lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  attachment download improved, introduced attachments view,
+	  cleanup
+
+	* bin/rtconsole, lib/RT/Client/Console/Connection.pm,
+	  lib/RT/Client/Console/Session/Ticket/Transactions.pm:
+	  added attachement download support, download directory support
+
+	* lib/RT/Client/Console.pm:
+	  added message dialog method. Fixed list box height
+
+2008-03-23  Damien "dams" Krotkine <dams@cpan.org>
+
+	* Changes:
+	  updated Changes
+
 2008-03-23  Sébastien Aperghis-Tramoni <saper@cpan.org>
 
 	* authors:

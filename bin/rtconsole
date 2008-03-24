@@ -23,6 +23,9 @@ sub main {
                'help',
                'version|V',
                'debug',
+               'download-dir=s',
+               'view-image=s',
+               'view-text=s',
               ) or usage();
 
     $options{help} and usage();
@@ -36,6 +39,11 @@ sub main {
 
     my $config = {};
     exists $options{$_} and $config->{connection}{$_} = $options{$_} foreach (qw(server user pass));
+    foreach (qw(download-dir view-image view-text)) {
+        my $o = $_;
+        $o =~ s/-/_/g;
+        exists $options{$_} and $config->{files}{$o} = $options{$_};
+    }
 
     my $config_filename = $ENV{HOME} . '/.rtconsolerc';
     exists $options{'config-file'} && length $options{'config-file'} and $config_filename = $options{'config-file'};
@@ -129,6 +137,21 @@ Specify the user to connect to the server
 
 Specify the password to connect to the server
 
+=item --download-dir download_directory
+
+Specify the directory to use to download and store files (from a ticket
+attachment for instance).
+
+=item --view-image
+
+Specify the command line to execute to display image. C<%s> will be replaced by
+the file name.
+
+=item --view-text
+
+Specify the command line to execute to display text. C<%s> will be replaced by
+the file name.
+
 =item  --config-file filename
 
 Specify the config file to read. Default $HOME/.rtconsolerc
@@ -168,11 +191,16 @@ possible keys/values for now :
   user=dams
   pass=my_password
 
-For now there is only one section cannled Connection. More will be added in
+  [files]
+  download_dir=/some/directory     # where to store attachments
+  view_image=/usr/bin/cacaview %s  # how to display an image (%s in the filename)
+  view_text=/usr/bin/nano %s       # how to display a text (%s in the filename)
+
+There are 2 sections for now : C<connection> and C<files>. More will be added in
 the next versions of this software.
 
 You can generate the config file by using --generate-config. It'll be saved at
-the location sp--config-file, or ad the default location
+the location specified with --config-file, or at the default location (C<$HOME/.rtconsolerc>)
 
 =head1 AUTHOR
 
